@@ -2,10 +2,6 @@
 apps
 packages
 ifc
-IFCImport/bin
-IFCImport/run
-IFCImport/obj
-IFCImport/Properties
 IFCImportUI/bin
 IFCImportUI/run
 IFCImportUI/obj
