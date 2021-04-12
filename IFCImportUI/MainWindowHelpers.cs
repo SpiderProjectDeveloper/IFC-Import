@@ -66,17 +66,20 @@ namespace IFCImportUI
             {
                 tbVolumePropertyName.IsEnabled = true;
                 tbCostPropertyName.IsEnabled = true;
+                tbMaterialPropertyName.IsEnabled = true;
                 tbVolumePropertyNameTitle.Foreground = _activeColor;
                 tbCostPropertyNameTitle.Foreground = _activeColor;
-            }
-            else
+                tbMaterialPropertyNameTitle.Foreground = _activeColor;
+            } else
             {
                 tbVolumePropertyName.IsEnabled = false;
                 tbCostPropertyName.IsEnabled = false;
+                tbMaterialPropertyName.IsEnabled = false;
                 tbVolumePropertyNameTitle.Foreground = _disableColor;
                 tbCostPropertyNameTitle.Foreground = _disableColor;
+                tbMaterialPropertyNameTitle.Foreground = _disableColor;
             }
-            bool changed = _volumePropertyNameChanged || _costPropertyNameChanged;
+            bool changed = _volumePropertyNameChanged || _costPropertyNameChanged || _materialPropertyNameChanged;
             btnParseIfcFile.IsEnabled =
                 ((status == ExportStatus.notParsed) ||
                 (status != ExportStatus.waitParsing && status != ExportStatus.waitExporting && changed)) ? true : false;

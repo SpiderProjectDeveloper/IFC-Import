@@ -8,7 +8,9 @@ namespace IFCImportUI
 {
     class Api
     {
-        public static int Run( ref string server, ref string activities, ref string ifcPath, ref string wexbimPath )
+        public static int Run( ref string server, ref string activities, 
+            ref string materials, ref string materialAssignments, 
+            ref string ifcPath, ref string wexbimPath )
         {
             int status = -1;
 
@@ -16,22 +18,31 @@ namespace IFCImportUI
             {
                 string projectCode = Path.GetFileNameWithoutExtension(ifcPath);
                 string wexbimJson = "";
-                if (wexbimPath != null && !wexbimPath.Equals(""))
-                {
+                if (wexbimPath != null && !wexbimPath.Equals("")) {
                     wexbimJson = ",\"WexbimPath\":\"" + wexbimPath.Replace("\\", "\\\\") + "\"";
                 }
+                string materialsJson = "";
+                if( materials.Length > 0 ) {
+                    materialsJson = ", \"materials\": " + materials;
+                }
+                string materialAssignmentsJson = "";
+                if (materialAssignments.Length > 0) {
+                    materialAssignmentsJson = ", \"activitiesMaterials\": " + materialAssignments;
+                }
                 byte[] bytes = Encoding.UTF8.GetBytes(
-                    "{\"command\":\"createProject\",\"project\":{\"Version\":1,\"Code\":\"" + 
-                    projectCode + "\"" + wexbimJson + "}, \"activities\":" + activities+ "}"
+                    "{\"command\":\"createProject\",\"project\":{\"Version\":1,\"Code\":\"" +
+                    projectCode + "\"" + wexbimJson + "}, \"activities\":" + activities +
+                    materialsJson + materialAssignmentsJson + "}"
                 );
 
                 // DEBUG
                 /*
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"../../dest.txt"))
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"..\..\dest.txt"))
                 {
                     file.WriteLine(
                         "{\"command\":\"createProject\",\"project\":{\"Version\":1,\"Code\":\"" +
-                        projectCode + "\"" + wexbimJson + "}, \"activities\":" + activities + "}"
+                        projectCode + "\"" + wexbimJson + "}, \"activities\":" + activities +
+                        materialsJson + materialAssignmentsJson + "}"
                     );
                 }
                 */

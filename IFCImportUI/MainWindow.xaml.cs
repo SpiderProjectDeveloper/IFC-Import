@@ -62,6 +62,7 @@ namespace IFCImportUI
         string _ifcPath;
         bool _volumePropertyNameChanged = false;
         bool _costPropertyNameChanged = false;
+        bool _materialPropertyNameChanged = false;
 
         public MainWindow()
         {
@@ -78,6 +79,10 @@ namespace IFCImportUI
         private void tbCostPropertyName_TextChanged(object sender, RoutedEventArgs e)
         {
             _costPropertyNameChanged = true;
+            setIfcStatusControls(ExportStatus.notParsed);
+        }
+        private void tbMaterialPropertyName_TextChanged(object sender, RoutedEventArgs e) {
+            _materialPropertyNameChanged = true;
             setIfcStatusControls(ExportStatus.notParsed);
         }
 
@@ -143,9 +148,10 @@ namespace IFCImportUI
 
             string vname = tbVolumePropertyName.Text;
             string cname = tbCostPropertyName.Text;
+            string mname = tbMaterialPropertyName.Text;
             int maxLevel = await Task.Run(() => {
                 int level = 1;
-                _ifc = new Ifc(_ifcPath, ref _nodes, ref level, vname, cname);
+                _ifc = new Ifc(_ifcPath, ref _nodes, ref level, vname, cname, mname);
                 return level;
             });
             if (_ifc.isParsedOk())
@@ -158,6 +164,7 @@ namespace IFCImportUI
                 cmbLevels.SelectedIndex = 0;
                 _volumePropertyNameChanged = false;
                 _costPropertyNameChanged = false;
+                _materialPropertyNameChanged = false;
                 setIfcStatusControls(ExportStatus.Parsed);
             }
             else
@@ -204,14 +211,61 @@ namespace IFCImportUI
                 int wexbimStatus = _ifc.createWexbim(wexbimPath);
             }
             int n = 0;
-            string dest = "[";
-            exportNodes(ref _nodes, ref dest, 0, ref n);
-            dest += "]";
-            int status = Api.Run( ref server, ref dest, ref _ifcPath, ref wexbimPath);
+            string activities = "[";
+            formatActivities(ref _nodes, ref activities, 0, ref n);
+            activities += "]";
+            string materials;
+            formatMaterials(out materials);
+            string materialAssignments;
+            formatMaterialAssignments(out materialAssignments);
+            int status = Api.Run( ref server, ref activities, ref materials, ref materialAssignments, 
+                ref _ifcPath, ref wexbimPath);
             return status;
         }
 
-        private void exportNodes( ref ObservableCollection<Node> nodes, ref string dest, int skippedLevels, ref int n )
+        private void formatMaterials( out string dest )
+        {
+            dest = "";
+            if(_ifc._materials != null && _ifc._materials.Count > 0 )
+            {
+                bool first = true;
+                foreach (var pair in _ifc._materials) {
+                    if (first) {
+                        dest += "[";
+                        first = false;
+                    } else {
+                        dest += ",";
+                    }
+                    dest += "{\"Code\":\"" + pair.Key + "\", \"Name\":\"" + pair.Value + "\"}";
+                }
+            }
+            if (dest.Length > 0)
+                dest += "]";
+        }
+
+        private void formatMaterialAssignments( out string dest )
+        {
+            dest = "";
+            if( _ifc._materialAssignments.Count > 0 )
+            {
+                bool first = true;
+                foreach( var it in _ifc._materialAssignments )
+                {
+                    if( first) {
+                        dest += "[";
+                        first = false;
+                    } else {
+                        dest += ",";
+                    }
+                    dest += "{\"OperCode\":\"" + it._acode + 
+                        "\", \"MatCode\":\"" + it._mcode + "\", \"Fix\":\"" + it._volume + "\"}";
+                }
+            }
+            if (dest.Length > 0)
+                dest += "]";
+        }
+
+        private void formatActivities( ref ObservableCollection<Node> nodes, ref string dest, int skippedLevels, ref int n )
         {
             int skipLevel;
 
@@ -246,7 +300,7 @@ namespace IFCImportUI
                 if (node.Nodes.Count == 0)
                     continue;
                 ObservableCollection<Node> childNodes = node.Nodes;
-                exportNodes(ref childNodes, ref dest, skippedLevels + skipLevel, ref n);
+                formatActivities(ref childNodes, ref dest, skippedLevels + skipLevel, ref n);
             }
         }
     }

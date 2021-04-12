@@ -1,10 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.852
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFCImport", "IFCImport\IFCImport.csproj", "{57546208-7D8C-455A-BC48-B3E295FB2A1B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFCImportUI", "IFCImportUI\IFCImportUI.csproj", "{98D75D31-DD5E-4B19-9CDB-D8228068772A}"
 EndProject
 Global
@@ -13,10 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{57546208-7D8C-455A-BC48-B3E295FB2A1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57546208-7D8C-455A-BC48-B3E295FB2A1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{57546208-7D8C-455A-BC48-B3E295FB2A1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57546208-7D8C-455A-BC48-B3E295FB2A1B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98D75D31-DD5E-4B19-9CDB-D8228068772A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{98D75D31-DD5E-4B19-9CDB-D8228068772A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98D75D31-DD5E-4B19-9CDB-D8228068772A}.Release|Any CPU.ActiveCfg = Release|Any CPU

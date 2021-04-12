@@ -69,6 +69,10 @@
                 <TextBox Name="tbCostPropertyName" Width="100" TextChanged="tbCostPropertyName_TextChanged"></TextBox>
                 <TextBlock Name="tbCostPropertyNameTitle" Margin="8,2,2,2" FontSize="12"><Bold>Cost</Bold> Property</TextBlock>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="4,4,4,4">
+                <TextBox Name="tbMaterialPropertyName" Width="100" TextChanged="tbMaterialPropertyName_TextChanged"></TextBox>
+                <TextBlock Name="tbMaterialPropertyNameTitle" Margin="8,2,2,2" FontSize="12"><Bold>Material</Bold> Property</TextBlock>
+            </StackPanel>
 
             <Button Name="btnParseIfcFile" Margin="4,20,4,10" Padding="8" Click="btnParseIfcFile_Click">
                 Parse the IFC File

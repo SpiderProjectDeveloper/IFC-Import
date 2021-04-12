@@ -8,13 +8,30 @@ using Xbim.Common;
 using Xbim.ModelGeometry;
 using Xbim.Ifc4.StructuralElementsDomain;
 using Xbim.Ifc4.QuantityResource;
+using Xbim.Ifc4.MaterialResource;
+using Xbim.Ifc4.ProductExtension;
+using Xbim.Ifc2x3.MaterialResource;
+using Xbim.Ifc2x3.QuantityResource;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.ModelGeometry.Scene;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System;
 using System.IO;
 
 namespace IFCImportUI
 {
+
+    public struct IfcMaterialAssignment
+    {
+        public string _mcode, _acode, _volume;
+        public IfcMaterialAssignment( string mcode, string acode, string volume ) {
+            _mcode = mcode;
+            _acode = acode;
+            _volume = volume;
+        }
+    }
+
     class Ifc
     {
         string _path = null;
@@ -23,16 +40,22 @@ namespace IFCImportUI
 
         public bool isParsedOk() { return (_parsed == 1); }
 
-        string _volumePropertyName;
-        string _costPropertyName;
-           
+        private string _volumePropertyName;
+        private string _costPropertyName;
+        private string _materialPropertyName;
+
+        public Dictionary<string, string> _materials = new Dictionary<string, string>();
+        public List<IfcMaterialAssignment> _materialAssignments = new List<IfcMaterialAssignment>();
+
         public Ifc(string path, ref ObservableCollection<Node> nodes, ref int maxLevel,
-            string volumePropertyName, string costPropertyName )
+            string volumePropertyName, string costPropertyName, string materialPropertyName )
         {
-            _volumePropertyName = 
-                (volumePropertyName != null && volumePropertyName.Length > 0) ? volumePropertyName.ToLower() : null;
-            _costPropertyName = 
-                (costPropertyName != null && costPropertyName.Length > 0) ? costPropertyName.ToLower() : null;
+            _volumePropertyName = (volumePropertyName != null && volumePropertyName.Length > 0) ? 
+                volumePropertyName.ToLower() : null;
+            _costPropertyName = (costPropertyName != null && costPropertyName.Length > 0) ? 
+                costPropertyName.ToLower() : null;
+            _materialPropertyName = (materialPropertyName != null && materialPropertyName.Length > 0) ? 
+                materialPropertyName : null;
 
             _parsed = -1;
             using (IfcStore model = IfcStore.Open(path))
@@ -92,12 +115,12 @@ namespace IFCImportUI
             }
         } // End of ReadHierarchy
 
-
         private void ReadProps(IIfcProduct element, out string cVolume, out string volume, out string cost)
         {
             cVolume = "";
             volume = "";
             cost = "";
+            double grossArea=-1;
 
             // Reading custom "volume" and "cost" properties
             if (_volumePropertyName != null || _costPropertyName != null)
@@ -108,7 +131,7 @@ namespace IFCImportUI
                     OfType<IIfcPropertySingleValue>();
                 foreach (var property in properties)
                 {
-
+                    // Materials - look in "property"->"NominalValue"
                     if (_volumePropertyName != null)
                     {
                         if (String.Equals(property.Name.ToString().ToLower(), _volumePropertyName.ToLower()))
@@ -129,26 +152,71 @@ namespace IFCImportUI
                     Where(r => r.RelatingPropertyDefinition is IIfcElementQuantity).
                     SelectMany(r => ((IIfcElementQuantity)r.RelatingPropertyDefinition).PropertySetDefinitions).
                     OfType<IIfcElementQuantity>();
-                foreach (var property in properties)
-                {
-                    bool found = false;
-                    foreach (var qp in property.Quantities)
-                    {
+                foreach (var property in properties) {
+                    foreach (var qp in property.Quantities) {
                         if( String.Equals( qp.GetType().Name, "IfcQuantityVolume" ) ) {
                             var p = qp as IIfcQuantityVolume;
                             if (String.Equals( p.Name.ToString().ToLower(), "grossvolume") )
                             {
                                 cVolume = p.VolumeValue.ToString();
-                                found = true;
                                 break;
                             }
                         }
-                        if (found)
-                            break;
                     }                    
                 }
             } catch {
                 ;
+            }
+
+            if (_materialPropertyName != null) {    // If material prop is given...
+                var propSet = element.IsDefinedBy.
+                    Where(r => r.RelatingPropertyDefinition is IIfcPropertySet).
+                    SelectMany(r => ((IIfcPropertySet)r.RelatingPropertyDefinition).PropertySetDefinitions).
+                    OfType<IIfcPropertySet>();
+                try {
+                    foreach (var prop in propSet) {
+                        if (String.Equals(prop.Name.ToString().ToLower(), 
+                            _materialPropertyName.ToLower())) {
+                            // var x = element.Material.GetType();
+                            // element.Material.ForLayerSet
+                            // Xbim.Ifc4.MaterialResourse. vs Xbim.Ifc4.MaterialResourse.
+                            var mprops = prop.HasProperties.Where(r => r is IIfcPropertySingleValue).
+                                Select(r => (IIfcPropertySingleValue)r).OfType<IIfcPropertySingleValue>();
+                            foreach (var mprop in mprops) {
+                                var mCode = mprop.NominalValue.ToString();
+                                if (!_materials.ContainsKey(mCode)) {
+                                    _materials.Add(mCode, mprop.Name.ToString());
+                                }
+                                var ma = new IfcMaterialAssignment(
+                                    mCode, element.GlobalId.ToString(), cVolume);
+                                _materialAssignments.Add(ma);
+                            }
+                        }
+                    }
+                } catch {
+                    ;
+                }
+            } else {    // Extracting materials by default method
+                if (element.Material is Xbim.Ifc2x3.MaterialResource.IfcMaterialLayerSetUsage) {
+                    try {
+                        var mlayer =
+                            (Xbim.Ifc2x3.MaterialResource.IfcMaterialLayerSetUsage)element.Material;
+                        var layers = mlayer.ForLayerSet.MaterialLayers;
+                        foreach (var x in layers) {
+                            var mName = x.Material.Name.Value.ToString();
+                            var mCode = mName;
+                            var mThickness = x.LayerThickness.Value.ToString();
+                            if (!_materials.ContainsKey(mCode)) {
+                                _materials.Add(mCode, mName);
+                            }
+                            var ma = new IfcMaterialAssignment(
+                                mCode, element.GlobalId.ToString(), mThickness);
+                            _materialAssignments.Add(ma);
+                        }
+                    } catch {
+                        ;
+                    }
+                }
             }
         } // End of readProps
 
