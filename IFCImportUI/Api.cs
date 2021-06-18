@@ -10,7 +10,7 @@ namespace IFCImportUI
     {
         public static int Run( ref string server, ref string activities, 
             ref string materials, ref string materialAssignments, 
-            ref string ifcPath, ref string wexbimPath )
+            ref string ifcPath, ref string wexbimPath, ref string updateProjectPath )
         {
             int status = -1;
 
@@ -20,6 +20,10 @@ namespace IFCImportUI
                 string wexbimJson = "";
                 if (wexbimPath != null && !wexbimPath.Equals("")) {
                     wexbimJson = ",\"WexbimPath\":\"" + wexbimPath.Replace("\\", "\\\\") + "\"";
+                }
+                string updateProjectJson = "";
+                if (updateProjectPath != null && !updateProjectPath.Equals("")) {
+                    updateProjectJson = ",\"projectPath\":\"" + updateProjectPath.Replace("\\", "\\\\") + "\"";
                 }
                 string materialsJson = "";
                 if( materials.Length > 0 ) {
@@ -31,7 +35,7 @@ namespace IFCImportUI
                 }
                 byte[] bytes = Encoding.UTF8.GetBytes(
                     "{\"command\":\"createProject\",\"project\":{\"Version\":1,\"Code\":\"" +
-                    projectCode + "\"" + wexbimJson + "}, \"activities\":" + activities +
+                    projectCode + "\"" + wexbimJson + updateProjectJson + "}, \"activities\":" + activities +
                     materialsJson + materialAssignmentsJson + "}"
                 );
 

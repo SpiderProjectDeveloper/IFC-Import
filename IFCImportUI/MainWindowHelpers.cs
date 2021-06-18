@@ -22,7 +22,7 @@ namespace IFCImportUI
         string _msgExported = "IFC data has been successfully exported!";
         string _msgWaitExporting = "Please wait while exporting the IFC file...";
         string _msgFailedToExport = "Error exporting the IFC file...";
-
+        string _txtNewProjectWillBeCreated = null;
         System.Windows.Media.SolidColorBrush _disableColor = new System.Windows.Media.SolidColorBrush(SystemColors.GrayTextColor);
         System.Windows.Media.SolidColorBrush _activeColor = new System.Windows.Media.SolidColorBrush(SystemColors.ControlTextColor);
         private void setIfcStatusControls(ExportStatus status)

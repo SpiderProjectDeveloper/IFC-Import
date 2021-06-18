@@ -189,6 +189,22 @@ namespace IFCImportUI
             }
         }
 
+        private void btnUpdateProjectPath_Click(object sender, RoutedEventArgs e) {
+            if(_txtNewProjectWillBeCreated == null ) {
+                _txtNewProjectWillBeCreated = tbUpdateProjectPath.Text;
+            }
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.CheckFileExists = false;
+            openFileDialog.Filter = "Sprj Files(*.sprj)|*.sprj|All Files(*.*)|*.*";
+            if (openFileDialog.ShowDialog() == true) {
+                tbUpdateProjectPath.Text = openFileDialog.FileName;
+                //tbUpdateProjectPath.Height = System.Double.NaN;
+            } else {
+                tbUpdateProjectPath.Text = _txtNewProjectWillBeCreated;
+                //tbUpdateProjectPath.Height = 0;
+            }
+        }
+
         private async void btnExport_Click(object sender, RoutedEventArgs e)
         {
             if( !_ifc.isParsedOk() )
@@ -197,14 +213,15 @@ namespace IFCImportUI
 
             string server = tbServer.Text;
             string wexbimPath = tbWexbimPath.Text;
-            int status = await Task.Run( () => { return Export(ref server, ref wexbimPath); } );
+            string updateProjectPath = tbUpdateProjectPath.Text;
+            int status = await Task.Run( () => { return Export(ref server, ref wexbimPath, ref updateProjectPath); } );
             if (status == 0)
                 setIfcStatusControls(ExportStatus.exported);
             else
                 setIfcStatusControls(ExportStatus.failedToExport);
         }
 
-        private int Export( ref string server, ref string wexbimPath )
+        private int Export( ref string server, ref string wexbimPath, ref string updateProjectPath )
         {
             if (wexbimPath != null && !wexbimPath.Equals(""))    // If there is a wexbim path specified
             {
@@ -219,7 +236,7 @@ namespace IFCImportUI
             string materialAssignments;
             formatMaterialAssignments(out materialAssignments);
             int status = Api.Run( ref server, ref activities, ref materials, ref materialAssignments, 
-                ref _ifcPath, ref wexbimPath);
+                ref _ifcPath, ref wexbimPath, ref updateProjectPath );
             return status;
         }
 
